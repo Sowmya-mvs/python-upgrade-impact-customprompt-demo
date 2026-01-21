@@ -1,54 +1,104 @@
-﻿# Python 3.12+ Upgrade Impact Assessment
+﻿# Python 3.12+ Upgrade Impact Assessment Report
 
-## Executive summary
-This repository contains legacy Python code and dependency pins that are incompatible with Python 3.12+. Specifically, it imports standard library modules removed in Python 3.12 (imp, asyncore) and uses Python 2-style print syntax. The pinned third-party dependencies (requests==2.19.0, numpy==1.18.0) are too old to support Python 3.12, which will likely cause installation failures or runtime issues. Without remediation, upgrading will break at import time and during dependency installation.
+## Executive Summary
 
-Overall risk rating: HIGH.
+This report analyzes the **python-upgrade-impact-customprompt-demo** repository for compatibility issues when upgrading to Python 3.12+. The analysis identified **critical issues** that will prevent the code from running on Python 3.12 without remediation.
 
-## Files impacted
-- src/legacy_calc.py
-  - import imp — imp is deprecated and removed in Python 3.12. Use importlib instead.
-  - import asyncore — asyncore is deprecated and removed in Python 3.12. Use syncio or selectors with sockets.
-  - print "Result:", a + b — Python 2 syntax; Python 3.12 requires print().
-- src/legacy_utils.py
-  - No direct Python 3.12 incompatibilities detected. collections.Counter is supported.
-- equirements.txt
-  - equests==2.19.0 — released in 2018; does not advertise support for Python 3.12.
-  - 
-umpy==1.18.0 — released around 2019/2020; does not support Python 3.12 (wheels unavailable; build may fail).
+**Overall Upgrade Risk Rating: HIGH**
 
-## Issue categories
-- Standard library removals (PEP 594 and related deprecations):
-  - imp (deprecated; functionality replaced by importlib APIs)
-  - syncore (deprecated; recommend syncio or selectors)
-- Incompatible Python syntax:
-  - Python 2-style print statement; use print() function or f-strings.
-- Dependency risks:
-  - Very old pinned versions unlikely to provide Python 3.12 wheels/compatibility.
+---
 
-## Dependency risks and details
-- equests==2.19.0
-  - Risk: High. Pre-dates modern Python minor versions; may install but is untested and potentially incompatible with TLS/certifi bundles and Python 3.12 runtime changes.
-  - Suggestion: Upgrade to equests>=2.31.0 (or latest 2.32.x) which supports modern Python.
-- 
-umpy==1.18.0
-  - Risk: Critical. Wheels for Python 3.12 are not provided for this version; source build will likely fail due to updated compiler/ABI requirements.
-  - Suggestion: Upgrade to 
-umpy>=1.26.0 (or latest stable, e.g. 2.x) which provides wheels for Python 3.12.
+## Files Impacted
 
-## Suggested remediation
-- Code changes in src/legacy_calc.py:
-  - Replace import imp with import importlib and use importlib functions (e.g., importlib.import_module).
-  - Replace import asyncore usage with syncio-based networking or selectors with non-blocking sockets.
-  - Update print to Python 3: print(f"Result: {a + b}").
-- Dependency updates in equirements.txt:
-  - equests>=2.31.0
-  - 
-umpy>=1.26.0
-- Testing:
-  - Run unit tests under Python 3.12 after changes.
-  - Add CI job for Python 3.12 to validate ongoing compatibility.
+| File | Status |
+|------|--------|
+| src/legacy_calc.py | :x: **Critical Issues Found** |
+| src/legacy_utils.py | :white_check_mark: Compatible |
+| equirements.txt | :warning: **Dependency Risks** |
 
-## Overall upgrade risk rating
-- Risk: HIGH
-- Rationale: Direct imports of removed stdlib modules and Python 2 syntax will prevent code from running; dependency pins will fail to install on Python 3.12.
+---
+
+## Issue Categories
+
+### 1. Removed Standard Library Modules
+
+| Module | File | Removal Version | Replacement |
+|--------|------|-----------------|-------------|
+| imp | src/legacy_calc.py | Python 3.12 | importlib |
+| syncore | src/legacy_calc.py | Python 3.12 | syncio |
+
+### 2. Incompatible Python Syntax
+
+| Issue | File | Line | Fix |
+|-------|------|------|-----|
+| Python 2 print statement | src/legacy_calc.py | print "Result:", a + b | print("Result:", a + b) |
+
+### 3. Dependency Risks
+
+| Package | Current Version | Risk | Recommended Version |
+|---------|-----------------|------|---------------------|
+| equests | 2.19.0 | Security vulnerabilities, outdated | 2.31.0+ |
+| 
+umpy | 1.18.0 | **Not compatible with Python 3.12** | 1.26.0+ |
+
+---
+
+## Suggested Remediation
+
+### src/legacy_calc.py
+
+1. **Replace imp with importlib:**
+   `python
+   # Before
+   import imp
+   
+   # After
+   import importlib
+   `
+
+2. **Replace syncore with syncio:**
+   `python
+   # Before
+   import asyncore
+   
+   # After
+   import asyncio
+   `
+
+3. **Fix print statement syntax:**
+   `python
+   # Before
+   print "Result:", a + b
+   
+   # After
+   print("Result:", a + b)
+   `
+
+### requirements.txt
+
+Update dependencies to Python 3.12 compatible versions:
+`
+requests>=2.31.0
+numpy>=1.26.0
+`
+
+---
+
+## Overall Upgrade Risk Rating
+
+| Rating | Description |
+|--------|-------------|
+| **HIGH** | Critical blocking issues found. Code will not run on Python 3.12+ without fixes. Immediate remediation required before upgrade. |
+
+---
+
+## Next Steps
+
+1. Apply the suggested code fixes to src/legacy_calc.py
+2. Update equirements.txt with compatible package versions
+3. Run test suite after changes
+4. Validate application functionality on Python 3.12
+
+---
+
+*Report generated on: January 21, 2026*
